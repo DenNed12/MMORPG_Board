@@ -153,3 +153,21 @@ AUTH_USER_MODEL = 'users.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+LOGIN_REDIRECT_URL = "/board"
+LOGOUT_REDIRECT_URL = "/board"
+
+
+
+# email settings
+DEFAULT_FROM_EMAIL = "deonissl@yandex.ru"
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "deonissl@yandex.ru"
+EMAIL_HOST_PASSWORD = "password"
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_BACKEND = 'django.core.mail.backends.console.Ema'\
+                'ilBackend'
+SERVER_EMAIL = "deonissl@yandex.ru"
