@@ -3,8 +3,10 @@ from django.shortcuts import redirect
 from django.views.generic import DetailView, UpdateView, CreateView, ListView, DetailView, DeleteView
 from .models import Post,Reply
 from .filters import PostFilter
-from .forms import PostForm
+from .forms import PostForm, ReplyForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 # Create your views here.
 def index(request):
     return redirect('/board')
@@ -50,3 +52,20 @@ class DeletePost(LoginRequiredMixin,DeleteView):
     model = Post
     template_name = 'board/post_confirm_delete.html'
     #context_object_name = 'delete_post'
+
+
+@login_required()
+def add_reply(request,pk):
+    post = get_object_or_404(Post, pk =pk)
+    reply = Reply.objects.filter(postReply = post)
+    if request.method == 'POST':
+        form = ReplyForm(request.POST)
+        if form.is_valid():
+            repl = form.save(commit=False)
+            repl.postReply = post
+            repl.postUser = request.user
+            repl.save()
+    else:
+        form = ReplyForm()
+
+    return render(request, 'board/post_detail.html', {'post': post, 'form': form, 'reply': reply})

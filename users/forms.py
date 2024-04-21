@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from .models import User
 from django import forms
 import random
@@ -49,3 +49,13 @@ class RegisterForm(UserCreationForm):
             recipient_list=[user.email],
         )
         return user
+
+
+class LoginForm(AuthenticationForm):
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            # "email",
+            "password",
+        )
