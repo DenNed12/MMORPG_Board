@@ -7,7 +7,13 @@ from .forms import PostForm, ReplyForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-# Create your views here.
+from .models import User
+from django.core.mail import send_mail
+
+
+email = "deonissl@yandex.ru"
+
+
 def index(request):
     return redirect('/board')
 
@@ -54,18 +60,51 @@ class DeletePost(LoginRequiredMixin,DeleteView):
     #context_object_name = 'delete_post'
 
 
-@login_required()
-def add_reply(request,pk):
-    post = get_object_or_404(Post, pk =pk)
-    reply = Reply.objects.filter(postReply = post)
-    if request.method == 'POST':
-        form = ReplyForm(request.POST)
-        if form.is_valid():
-            repl = form.save(commit=False)
-            repl.postReply = post
-            repl.postUser = request.user
-            repl.save()
-    else:
-        form = ReplyForm()
+# @login_required()
+# def add_reply(request,pk):
+#     post = get_object_or_404(Post, pk =pk)
+#     reply = Reply.objects.filter(postReply = post)
+#     if request.method == 'POST':
+#         form = ReplyForm(request.POST)
+#         if form.is_valid():
+#             repl = form.save(commit=False)
+#             repl.postReply = post
+#             repl.postUser = request.user
+#             repl.save()
+#     else:
+#         form = ReplyForm()
+#
+#     return render(request, 'board/post_detail.html', {'post': post, 'form': form, 'reply': reply})
 
-    return render(request, 'board/post_detail.html', {'post': post, 'form': form, 'reply': reply})
+
+class AddReply(LoginRequiredMixin, CreateView):
+    raise_exception = True
+    model = Reply
+    form_class = ReplyForm
+    template_name = 'post_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ReplyForm
+        return context
+
+    def post(self,request, *args,**kwargs):
+        form = self.form_class(request.POST)
+        reply = form.save(commit=False)
+        post= get_object_or_404(Post, id=self.kwargs['pk'])
+        if form.is_valid():
+            reply.author = self.request.user
+            reply.post_id = self.kwargs['pk']
+            reply.post=post
+            reply.save()
+            author = User.objects.get(pk=post.authorReply_id)
+            send_mail(
+                subject='Отклик на объявление',
+                message=f'На объявление {post} был добавлен отклик {reply.text} пользователем {self.request.user}.\n'
+                        f'Прочитать отклик:\nhttp://127.0.0.1:8000/posts/{reply.post.id}',
+                from_email=email,
+                recipient_list=[author.email],
+            )
+        return redirect('board:post_detail', request.POST['username'])
+
+

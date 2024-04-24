@@ -59,3 +59,9 @@ class LoginForm(AuthenticationForm):
             # "email",
             "password",
         )
+
+
+class CodeForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('code',)

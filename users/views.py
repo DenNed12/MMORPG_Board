@@ -1,5 +1,5 @@
 from .models import User
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, CodeForm
 from django.views.generic.edit import CreateView,UpdateView,FormView
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login, logout
@@ -24,19 +24,31 @@ class RegisterView(CreateView):
 
 class ConfirmUser(UpdateView):
     model = User
-    context_object_name = 'confirm_user'
     template_name = 'users/confirm_user.html'
+    form_class = CodeForm
     def post(self,request, *args, **kwargs):
-        if 'code' in request.post:
-            user = User.objects.filter(code = request.POST('code'))
-            if user.exists():
-                user.update(is_active = True)
-                user.update(code = None)
-
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            code = form.save(commit=False)
+            username = self.kwargs.get('username')
+            # print('Username:',username)
+            # print('Form:',form)
+            # print('Code:',code.code)
+            user= User.objects.get(username = username)
+            if code.code == user.code:
+                user.is_active = True
+                user.save()
+                return redirect('users:login')
             else:
-                return render(self.request, template_name='wrong_code.html')
-            return redirect('login')
+                return redirect('users:signup')
 
+
+
+    def get_object(self):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        print('Выводим пользователя',user)
+        return user
 
 class LoginView(FormView):
     model = User
