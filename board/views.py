@@ -34,10 +34,6 @@ class PostList(ListView):
         return context
 
 
-class PostDetail(DetailView):
-    model = Post
-    template_name = 'board/post_detail.html'
-    context_object_name ='post'
 
 
 class CreatePost(LoginRequiredMixin,CreateView):
@@ -81,7 +77,7 @@ class AddReply(LoginRequiredMixin, CreateView):
     raise_exception = True
     model = Reply
     form_class = ReplyForm
-    template_name = 'post_detail.html'
+    template_name = 'board/post_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -90,14 +86,14 @@ class AddReply(LoginRequiredMixin, CreateView):
 
     def post(self,request, *args,**kwargs):
         form = self.form_class(request.POST)
-        reply = form.save(commit=False)
-        post= get_object_or_404(Post, id=self.kwargs['pk'])
+        post = get_object_or_404(Post, id=self.kwargs['pk'])
         if form.is_valid():
-            reply.author = self.request.user
+            reply = form.save(commit=False)
+            reply.authorReply = self.request.user
             reply.post_id = self.kwargs['pk']
-            reply.post=post
+            reply.post = post
             reply.save()
-            author = User.objects.get(pk=post.authorReply_id)
+            author = User.objects.get(pk=post.author_id)
             send_mail(
                 subject='Отклик на объявление',
                 message=f'На объявление {post} был добавлен отклик {reply.text} пользователем {self.request.user}.\n'
@@ -105,6 +101,22 @@ class AddReply(LoginRequiredMixin, CreateView):
                 from_email=email,
                 recipient_list=[author.email],
             )
-        return redirect('board:post_detail', request.POST['username'])
+        return redirect('/board/post_detail.html')
 
 
+class PostDetail(AddReply,DetailView):
+    model = Post
+    template_name = 'board/post_detail.html'
+    context_object_name ='post'
+
+
+
+class Replies(LoginRequiredMixin, ListView):
+    model = Reply
+    template_name = 'board/replies.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = Reply.objects.filter(authorReply_id=self.request.user.id)
+        context['filterset'] = PostFilter(self.request.GET, queryset, request=self.request.user.id)
+        return context

@@ -40,8 +40,8 @@ class Reply(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.id} Отзыв {self.text} от {self.authorReply}'
+        return f'{self.id} Отзыв {self.text} '
 
     def get_absolute_url(self):
-        return reverse(viewname='post_detail', kwargs={'pk': self.postReply_id})
+        return reverse(viewname='post_detail', kwargs={'pk': self.post_id})
 
