@@ -6,6 +6,14 @@
 
 
 {% block content %}
+
+{% if request.user.is_authenticated %}
+<h3>Добро пожаловать {{user.username}}</h3>
+<a href="{%url 'board:replies_to_user'%}"> Отзывы на ваши посты за все время </a>
+{% else %}
+    <h4>Вы не зарегестрированы!</h4>
+  <a href="{%url 'users:signup'%}"> Зарегестрироваться </a>
+{% endif %}
    <h1>Сисок постов за все время</h1>
 
     <form action="" method="get">
@@ -13,7 +21,7 @@
        <input type="submit" value="Найти" />
    </form>
     <hr/>
-    {% if perms.board.change_post %}
+    {% if request.user.is_authenticated %}
     <h2> Хотите создать свой пост?</h2>
     <a href="{%url 'board:create_post'%}"> Добавить пост </a>
 
